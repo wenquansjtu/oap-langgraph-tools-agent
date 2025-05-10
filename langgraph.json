@@ -8,5 +8,4 @@
   "auth": {
     "path": "./tools_agent/security/auth.py:auth"
   }
-
 }
