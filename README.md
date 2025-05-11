@@ -1,20 +1,59 @@
 # Open Agent Platform LangGraph Tools Agent
 
-This is a LangGraph agent that can be used with the Open Agent Platform.
+A pre-built LangGraph tools agent for Open Agent Platform. It contains support for MCP servers and a LangConnect RAG tool.
+
+> [!TIP]
+> This project is built for [Open Agent Platform](https://github.com/langchain-ai/open-agent-platform), a citizen developer platform for building, testing, and using agents.
 
 ## Setup
 
-**TODO:** Add setup docs here
+First, clone the repository and create a new virtual environment:
+
+```bash
+git clone https://github.com/langchain-ai/oap-langgraph-tools-agent.git
+```
+
+```bash
+uv venv
+```
+
+Activate the virtual environment:
+
+```bash
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+uv run pip install -e .
+```
+
+Then set the environment variables:
+
+```bash
+cp .env.example .env
+```
+
+This project requires a Supabase account with authentication to be setup. This is because this project implements custom LangGraph authentication so that it can be called directly from a web client.
+
+After setting your environment variables, you can start the server by running:
+
+```bash
+uv run langgraph run agent
+```
+
+The server will now be running on `http://localhost:2024`.
 
 ## Open Agent Platform
 
-**TODO:** Add Open Agent Platform docs here
+This agent has been configured to work with the [Open Agent Platform](https://github.com/langchain-ai/open-agent-platform). Please see the [OAP docs](https://github.com/langchain-ai/open-agent-platform/tree/main/README.md) for more information on how to add this agent to your OAP instance.
 
 ## Authentication
 
 This project uses LangGraph custom auth to authenticate requests to the server. It's configured to use Supabase as the authentication provider, however it can be easily swapped for another service.
 
-Requests must contain an `Authorization` header with a `Bearer` token. This token should be a valid JWT token from Supabase.
+Requests must contain an `Authorization` header with a `Bearer` token. This token should be a valid JWT token from Supabase (or another service that implements the same authentication protocol).
 
 The auth handler then takes that token and verifies it with Supabase. If the token is valid, it returns the user's identity. If the token is invalid, it raises an exception. This means you must have a Supabase URL & key set in your environment variables to use this auth handler:
 
