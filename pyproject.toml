@@ -8,16 +8,23 @@ authors = [
 requires-python = ">=3.11.0,<3.13"
 dependencies = [
     "langgraph==0.4.3",
-    "langgraph-cli==0.2.10",
     "langchain-anthropic==0.3.13",
     "langchain-core==0.3.59",
     "langchain-openai==0.3.16",
     "pydantic==2.11.3",
     "langchain==0.3.25",
     "langchain-mcp-adapters==0.0.11",
-    "langgraph-api==0.2.20",
     "supabase>=2.15.1",
+    "aiohttp>=3.8.0",
 ]
 
 [tool.setuptools]
 packages = ["tools_agent"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8.4",
+    "langgraph-api==0.2.21",
+    "langgraph-cli==0.2.10",
+    "langgraph-runtime-inmem>=0.0.11",
+]

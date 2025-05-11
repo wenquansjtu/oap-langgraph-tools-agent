@@ -20,12 +20,13 @@ auth = Auth()
 @auth.authenticate
 async def get_current_user(authorization: str | None) -> Auth.types.MinimalUserDict:
     """Check if the user's JWT token is valid using Supabase."""
+
     # Ensure we have authorization header
     if not authorization:
         raise Auth.exceptions.HTTPException(
             status_code=401, detail="Authorization header missing"
         )
-    
+
     # Parse the authorization header
     try:
         scheme, token = authorization.split()
@@ -34,28 +35,28 @@ async def get_current_user(authorization: str | None) -> Auth.types.MinimalUserD
         raise Auth.exceptions.HTTPException(
             status_code=401, detail="Invalid authorization header format"
         )
-    
+
     # Ensure Supabase client is initialized
     if not supabase:
         raise Auth.exceptions.HTTPException(
             status_code=500, detail="Supabase client not initialized"
         )
-    
+
     try:
         # Verify the JWT token with Supabase using asyncio.to_thread to avoid blocking
         # This will decode and verify the JWT token in a separate thread
         async def verify_token() -> dict[str, Any]:
             response = await asyncio.to_thread(supabase.auth.get_user, token)
             return response
-        
+
         response = await verify_token()
         user = response.user
-        
+
         if not user:
             raise Auth.exceptions.HTTPException(
                 status_code=401, detail="Invalid token or user not found"
             )
-        
+
         # Return user info if valid
         return {
             "identity": user.id,
@@ -79,14 +80,17 @@ async def on_thread_create(
     2. Returns a filter that ensures only the creator can access it
     """
 
+    if ctx.user.identity == "langgraph-studio-user":
+        return
+
     # Add owner metadata to the thread being created
     # This metadata is stored with the thread and persists
     metadata = value.setdefault("metadata", {})
     metadata["owner"] = ctx.user.identity
 
-
     # Return filter to restrict access to just the creator
     return {"owner": ctx.user.identity}
+
 
 @auth.on.threads.read
 @auth.on.threads.delete
@@ -104,19 +108,23 @@ async def on_thread_read(
     """
     return {"owner": ctx.user.identity}
 
+
 @auth.on.assistants.create
 async def on_assistants_create(
     ctx: Auth.types.AuthContext,
     value: Auth.types.on.assistants.create.value,
 ):
+    if ctx.user.identity == "langgraph-studio-user":
+        return
+
     # Add owner metadata to the assistant being created
     # This metadata is stored with the assistant and persists
     metadata = value.setdefault("metadata", {})
     metadata["owner"] = ctx.user.identity
 
-
     # Return filter to restrict access to just the creator
     return {"owner": ctx.user.identity}
+
 
 @auth.on.assistants.read
 @auth.on.assistants.delete
@@ -132,10 +140,18 @@ async def on_assistants_read(
     metadata since the assistant already exists - we just need to
     return a filter to ensure users can only see their own assistants.
     """
+
+    if ctx.user.identity == "langgraph-studio-user":
+        return
+
     return {"owner": ctx.user.identity}
+
 
 @auth.on.store()
 async def authorize_store(ctx: Auth.types.AuthContext, value: dict):
+    if ctx.user.identity == "langgraph-studio-user":
+        return
+
     # The "namespace" field for each store item is a tuple you can think of as the directory of an item.
     namespace: tuple = value["namespace"]
     assert namespace[0] == ctx.user.identity, "Not authorized"
