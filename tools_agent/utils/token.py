@@ -109,7 +109,6 @@ async def fetch_tokens(config: RunnableConfig) -> dict[str, Any]:
 
     current_tokens = await get_tokens(config)
     if current_tokens:
-        print("Current tokens found")
         return current_tokens
 
     supabase_token = config.get("configurable", {}).get("x-supabase-access-token")
@@ -121,8 +120,6 @@ async def fetch_tokens(config: RunnableConfig) -> dict[str, Any]:
         return None
 
     mcp_tokens = await get_mcp_access_token(supabase_token, base_mcp_token_exchange_url)
-
-    print(f"Created new tokens!!!!!!\n\n{mcp_tokens}\n\n")
 
     await set_tokens(config, mcp_tokens)
     return mcp_tokens

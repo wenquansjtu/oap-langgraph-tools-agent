@@ -1,4 +1,4 @@
-.PHONY: format lint lint-fix help
+.PHONY: format lint help
 
 format:
 	ruff format .
@@ -12,4 +12,3 @@ help:
 	@echo "Available commands:"
 	@echo "  make format    - Format code with ruff"
 	@echo "  make lint      - Check code with ruff"
-	@echo "  make lint-fix  - Fix linting issues with ruff"
