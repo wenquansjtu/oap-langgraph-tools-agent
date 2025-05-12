@@ -137,7 +137,7 @@ async def graph(config: RunnableConfig):
         if (
             cfg.mcp_config
             and cfg.mcp_config.url
-            # and cfg.mcp_config.tools
+            and cfg.mcp_config.tools
             and (mcp_tokens := await fetch_tokens(config))
         ):
             await mcp_client.connect_to_server(
