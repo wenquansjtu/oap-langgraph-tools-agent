@@ -6,6 +6,7 @@ from tools_agent.utils.tools import create_rag_tool
 from langchain.chat_models import init_chat_model
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from tools_agent.utils.token import fetch_tokens
+from contextlib import asynccontextmanager
 
 
 class RagConfig(BaseModel):
@@ -114,43 +115,48 @@ class GraphConfigPydantic(BaseModel):
     )
 
 
+@asynccontextmanager
 async def graph(config: RunnableConfig):
-    cfg = GraphConfigPydantic(**config.get("configurable", {}))
-    tools = []
+    async with MultiServerMCPClient() as mcp_client:
+        cfg = GraphConfigPydantic(**config.get("configurable", {}))
+        tools = []
 
-    if cfg.rag and cfg.rag.rag_url and cfg.rag.collection:
-        rag_tool = create_rag_tool(cfg.rag.rag_url, cfg.rag.collection)
-        tools.append(rag_tool)
+        if cfg.rag and cfg.rag.rag_url and cfg.rag.collection:
+            rag_tool = create_rag_tool(cfg.rag.rag_url, cfg.rag.collection)
+            tools.append(rag_tool)
 
-    if cfg.mcp_config and cfg.mcp_config.url:
-        mcp_tokens = await fetch_tokens(config)
-        if mcp_tokens:
-            async with MultiServerMCPClient() as mcp_client:
-                await mcp_client.connect_to_server(
-                    "mcp_server",
-                    transport="streamable_http",
-                    url=cfg.mcp_config.url,
-                    headers={"Authorization": f"Bearer {mcp_tokens['access_token']}"},
-                )
+        if (
+            cfg.mcp_config
+            and cfg.mcp_config.url
+            and (mcp_tokens := await fetch_tokens(config))
+        ):
+            await mcp_client.connect_to_server(
+                "mcp_server",
+                transport="streamable_http",
+                url=cfg.mcp_config.url,
+                headers={"Authorization": f"Bearer {mcp_tokens['access_token']}"},
+            )
 
-                all_mcp_tools = mcp_client.get_tools()
+            all_mcp_tools = mcp_client.get_tools()
 
-                if cfg.mcp_config.tools:
-                    filtered_tools = []
-                    for tool in all_mcp_tools:
-                        if tool.name in cfg.mcp_config.tools:
-                            filtered_tools.append(tool)
-                    tools.extend(filtered_tools)
-                else:
-                    tools.extend(all_mcp_tools)
+            if cfg.mcp_config.tools:
+                filtered_tools = []
+                for tool in all_mcp_tools:
+                    if tool.name in cfg.mcp_config.tools:
+                        filtered_tools.append(tool)
+                tools.extend(filtered_tools)
+            else:
+                tools.extend(all_mcp_tools)
 
-    model = init_chat_model(
-        cfg.model_name, temperature=cfg.temperature, max_tokens=cfg.max_tokens
-    )
+        model = init_chat_model(
+            cfg.model_name,
+            temperature=cfg.temperature,
+            max_tokens=cfg.max_tokens,
+        )
 
-    return create_react_agent(
-        prompt=cfg.system_prompt,
-        model=model,
-        tools=tools,
-        config_schema=GraphConfigPydantic,
-    )
+        yield create_react_agent(
+            prompt=cfg.system_prompt,
+            model=model,
+            tools=tools,
+            config_schema=GraphConfigPydantic,
+        )
