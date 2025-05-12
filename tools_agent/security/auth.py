@@ -1,6 +1,7 @@
 import os
 import asyncio
 from langgraph_sdk import Auth
+from langgraph_sdk.auth.types import StudioUser
 from supabase import create_client, Client
 from typing import Optional, Any
 
@@ -80,7 +81,7 @@ async def on_thread_create(
     2. Returns a filter that ensures only the creator can access it
     """
 
-    if ctx.user.identity == "langgraph-studio-user":
+    if isinstance(ctx.user, StudioUser):
         return
 
     # Add owner metadata to the thread being created
@@ -106,6 +107,9 @@ async def on_thread_read(
     metadata since the thread already exists - we just need to
     return a filter to ensure users can only see their own threads.
     """
+    if isinstance(ctx.user, StudioUser):
+        return
+
     return {"owner": ctx.user.identity}
 
 
@@ -114,7 +118,7 @@ async def on_assistants_create(
     ctx: Auth.types.AuthContext,
     value: Auth.types.on.assistants.create.value,
 ):
-    if ctx.user.identity == "langgraph-studio-user":
+    if isinstance(ctx.user, StudioUser):
         return
 
     # Add owner metadata to the assistant being created
@@ -141,7 +145,7 @@ async def on_assistants_read(
     return a filter to ensure users can only see their own assistants.
     """
 
-    if ctx.user.identity == "langgraph-studio-user":
+    if isinstance(ctx.user, StudioUser):
         return
 
     return {"owner": ctx.user.identity}
@@ -149,7 +153,7 @@ async def on_assistants_read(
 
 @auth.on.store()
 async def authorize_store(ctx: Auth.types.AuthContext, value: dict):
-    if ctx.user.identity == "langgraph-studio-user":
+    if isinstance(ctx.user, StudioUser):
         return
 
     # The "namespace" field for each store item is a tuple you can think of as the directory of an item.
