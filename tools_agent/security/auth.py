@@ -107,6 +107,9 @@ async def on_thread_read(
     metadata since the thread already exists - we just need to
     return a filter to ensure users can only see their own threads.
     """
+    if isinstance(ctx.user, StudioUser):
+        return
+
     return {"owner": ctx.user.identity}
 
 
