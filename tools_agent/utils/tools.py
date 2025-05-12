@@ -1,6 +1,26 @@
-from langchain_core.tools import StructuredTool
+from langchain_core.tools import StructuredTool, ToolException
 import requests
+from mcp import McpError
 from pydantic import BaseModel, Field
+
+
+def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
+    """Wrap the tool coroutine to handle `interaction_required` MCP error.
+
+    Tried to obtain the URL from the error, which the LLM can use to render a link."""
+
+    old_coroutine = tool.coroutine
+
+    async def wrapped_mcp_coroutine(**kwargs):
+        try:
+            return await old_coroutine(**kwargs)
+        except McpError as e:
+            if e.error.code == -32003 and e.error.data:
+                raise ToolException(f"Requires interaction: {e.error.data['url']}")
+            raise e
+
+    tool.coroutine = wrapped_mcp_coroutine
+    return tool
 
 
 def create_rag_tool(rag_url: str, collection: str):
