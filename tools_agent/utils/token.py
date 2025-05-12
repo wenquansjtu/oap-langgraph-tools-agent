@@ -65,9 +65,9 @@ async def get_tokens(config: RunnableConfig):
     expires_in = tokens.value.get("expires_in")  # seconds until expiration
     created_at = tokens.created_at  # datetime of token creation
 
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
 
-    current_time = datetime.now()
+    current_time = datetime.now(timezone.utc)
     expiration_time = created_at + timedelta(seconds=expires_in)
 
     if current_time > expiration_time:
