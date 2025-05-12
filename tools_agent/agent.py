@@ -137,6 +137,7 @@ async def graph(config: RunnableConfig):
         if (
             cfg.mcp_config
             and cfg.mcp_config.url
+            # and cfg.mcp_config.tools
             and (mcp_tokens := await fetch_tokens(config))
         ):
             await mcp_client.connect_to_server(
@@ -146,14 +147,13 @@ async def graph(config: RunnableConfig):
                 headers={"Authorization": f"Bearer {mcp_tokens['access_token']}"},
             )
 
-            all_mcp_tools = mcp_client.get_tools()
-            filtered_tools = (
-                [tool for tool in all_mcp_tools if tool.name in cfg.mcp_config.tools]
-                if cfg.mcp_config.tools
-                else all_mcp_tools
+            tools.extend(
+                [
+                    wrap_mcp_authenticate_tool(tool)
+                    for tool in mcp_client.get_tools()
+                    if tool.name in cfg.mcp_config.tools
+                ]
             )
-
-            tools.extend([wrap_mcp_authenticate_tool(tool) for tool in filtered_tools])
 
         model = init_chat_model(
             cfg.model_name,
