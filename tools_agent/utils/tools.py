@@ -16,9 +16,14 @@ def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
             return await old_coroutine(**kwargs)
         except McpError as e:
             if e.error.code == -32003 and e.error.data:
-                raise ToolException(
-                    f"Requires interaction ({e.error.message}): {e.error.data['url']}"
-                )
+                error_message = (
+                    ((e.error.data or {}).get("message") or {}).get("text")
+                ) or "Required interaction"
+
+                if url := (e.error.data or {}).get("url"):
+                    error_message += f": {url}"
+
+                raise ToolException(error_message)
             raise e
 
     tool.coroutine = wrapped_mcp_coroutine
