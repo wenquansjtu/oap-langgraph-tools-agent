@@ -90,7 +90,7 @@ class GraphConfigPydantic(BaseModel):
             "x_lg_ui_config": {
                 "type": "textarea",
                 "placeholder": "Enter a system prompt...",
-                "description": f"The system prompt to use in all generations. The following prompt will always be included at the end of the system prompt:\n---{UNEDITABLE_SYSTEM_PROMPT}---",
+                "description": f"The system prompt to use in all generations. The following prompt will always be included at the end of the system prompt:\n---{UNEDITABLE_SYSTEM_PROMPT}\n---",
                 "default": DEFAULT_SYSTEM_PROMPT,
             }
         },
