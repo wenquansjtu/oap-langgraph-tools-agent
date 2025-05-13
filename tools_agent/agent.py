@@ -40,7 +40,7 @@ class GraphConfigPydantic(BaseModel):
     model_name: Optional[str] = Field(
         default="anthropic:claude-3-7-sonnet-latest",
         metadata={
-            "x_lg_ui_config": {
+            "x_oap_ui_config": {
                 "type": "select",
                 "default": "anthropic:claude-3-7-sonnet-latest",
                 "description": "The model to use in all generations",
@@ -63,7 +63,7 @@ class GraphConfigPydantic(BaseModel):
     temperature: Optional[float] = Field(
         default=0.7,
         metadata={
-            "x_lg_ui_config": {
+            "x_oap_ui_config": {
                 "type": "slider",
                 "default": 0.7,
                 "min": 0,
@@ -76,7 +76,7 @@ class GraphConfigPydantic(BaseModel):
     max_tokens: Optional[int] = Field(
         default=4000,
         metadata={
-            "x_lg_ui_config": {
+            "x_oap_ui_config": {
                 "type": "number",
                 "default": 4000,
                 "min": 1,
@@ -87,7 +87,7 @@ class GraphConfigPydantic(BaseModel):
     system_prompt: Optional[str] = Field(
         default=DEFAULT_SYSTEM_PROMPT,
         metadata={
-            "x_lg_ui_config": {
+            "x_oap_ui_config": {
                 "type": "textarea",
                 "placeholder": "Enter a system prompt...",
                 "description": f"The system prompt to use in all generations. The following prompt will always be included at the end of the system prompt:\n---{UNEDITABLE_SYSTEM_PROMPT}\n---",
@@ -99,7 +99,7 @@ class GraphConfigPydantic(BaseModel):
         default=None,
         optional=True,
         metadata={
-            "x_lg_ui_config": {
+            "x_oap_ui_config": {
                 "type": "mcp",
                 # Here is where you would set the default tools.
                 # "default": {
@@ -112,7 +112,7 @@ class GraphConfigPydantic(BaseModel):
         default=None,
         optional=True,
         metadata={
-            "x_lg_ui_config": {
+            "x_oap_ui_config": {
                 "type": "rag",
                 # Here is where you would set the default collection. Use collection IDs
                 # "default": {
