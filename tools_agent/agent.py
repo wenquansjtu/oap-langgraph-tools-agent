@@ -131,8 +131,14 @@ async def graph(config: RunnableConfig):
         tools = []
 
         if cfg.rag and cfg.rag.rag_url and cfg.rag.collection:
-            rag_tool = create_rag_tool(cfg.rag.rag_url, cfg.rag.collection)
-            tools.append(rag_tool)
+            supabase_token = config.get("configurable", {}).get(
+                "x-supabase-access-token"
+            )
+            if supabase_token is not None:
+                rag_tool = create_rag_tool(
+                    cfg.rag.rag_url, cfg.rag.collection, supabase_token
+                )
+                tools.append(rag_tool)
 
         if (
             cfg.mcp_config
