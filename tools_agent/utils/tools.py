@@ -1,7 +1,8 @@
-from langchain_core.tools import StructuredTool, ToolException
-import requests
+from typing import Annotated
+from langchain_core.tools import StructuredTool, ToolException, tool
+import aiohttp
+import re
 from mcp import McpError
-from pydantic import BaseModel, Field
 
 
 def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
@@ -30,12 +31,13 @@ def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
     return tool
 
 
-def create_rag_tool(rag_url: str, collection: str, access_token: str):
+async def create_rag_tool(rag_url: str, collection: str, access_token: str):
     """Create a RAG tool for a specific collection.
 
     Args:
         rag_url: The base URL for the RAG API server
         collection: The name of the collection to query
+        access_token: The access token for authentication
 
     Returns:
         A structured tool that can be used to query the RAG collection
@@ -45,13 +47,24 @@ def create_rag_tool(rag_url: str, collection: str, access_token: str):
 
     collection_endpoint = f"{rag_url}/collections/{collection}"
     try:
-        response = requests.get(
-            collection_endpoint, headers={"Authorization": f"Bearer {access_token}"}
-        )
-        response.raise_for_status()
-        collection_data = response.json()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                collection_endpoint, headers={"Authorization": f"Bearer {access_token}"}
+            ) as response:
+                response.raise_for_status()
+                collection_data = await response.json()
 
-        collection_name = collection_data.get("name", collection)
+        # Get the collection name and sanitize it to match the required regex pattern
+        raw_collection_name = collection_data.get("name", collection)
+
+        # Sanitize the name to only include alphanumeric characters, underscores, and hyphens
+        # Replace any other characters with underscores
+        sanitized_name = re.sub(r"[^a-zA-Z0-9_-]", "_", raw_collection_name)
+
+        # Ensure the name is not empty and doesn't exceed 64 characters
+        if not sanitized_name:
+            sanitized_name = "collection"
+        collection_name = sanitized_name[:64]
 
         raw_description = collection_data.get("metadata", {}).get("description")
 
@@ -60,32 +73,30 @@ def create_rag_tool(rag_url: str, collection: str, access_token: str):
         else:
             collection_description = f"Search your collection of documents for results semantically similar to the input query. Collection description: {raw_description}"
 
-        def get_documents(query: str) -> str:
-            """Search for documents in the collection based on the query.
-
-            Args:
-                query: The search query string
-
-            Returns:
-                A formatted string containing all documents in XML-like format
-            """
+        @tool(name_or_callable=collection_name, description=collection_description)
+        async def get_documents(
+            query: Annotated[str, "The search query to find relevant documents"],
+        ) -> str:
+            """Search for documents in the collection based on the query"""
+            print(f"Search query: {query}")
             search_endpoint = f"{rag_url}/collections/{collection}/documents/search"
             payload = {"query": query, "limit": 10}
 
             try:
-                search_response = requests.post(
-                    search_endpoint,
-                    json=payload,
-                    headers={"Authorization": f"Bearer {access_token}"},
-                )
-                search_response.raise_for_status()
-                documents = search_response.json()
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        search_endpoint,
+                        json=payload,
+                        headers={"Authorization": f"Bearer {access_token}"},
+                    ) as search_response:
+                        search_response.raise_for_status()
+                        documents = await search_response.json()
 
                 formatted_docs = "<all-documents>\n"
 
                 for doc in documents:
                     doc_id = doc.get("id", "unknown")
-                    content = doc.get("content", "")
+                    content = doc.get("page_content", "")
                     formatted_docs += (
                         f'  <document id="{doc_id}">\n    {content}\n  </document>\n'
                     )
@@ -95,18 +106,15 @@ def create_rag_tool(rag_url: str, collection: str, access_token: str):
             except Exception as e:
                 return f"<all-documents>\n  <error>{str(e)}</error>\n</all-documents>"
 
-        class SearchArgs(BaseModel):
-            query: str = Field(
-                description="The search query to find relevant documents"
-            )
-
-        return StructuredTool.from_function(
-            func=get_documents,
-            name=collection_name,
-            description=collection_description,
-            args_schema=SearchArgs,
-            return_direct=True,
-        )
+        return get_documents
+        # return StructuredTool.from_function(
+        #     func=get_documents,
+        #     name=collection_name,  # This is now sanitized to match ^[a-zA-Z0-9_-]{1,64}$
+        #     description=collection_description,
+        #     # args_schema=SearchArgs,
+        #     return_direct=True,
+        #     coroutine=get_documents,  # Add the coroutine reference for async execution
+        # )
 
     except Exception as e:
         raise Exception(f"Failed to create RAG tool: {str(e)}")

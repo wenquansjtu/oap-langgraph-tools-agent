@@ -20,8 +20,8 @@ DEFAULT_SYSTEM_PROMPT = (
 class RagConfig(BaseModel):
     rag_url: Optional[str] = None
     """The URL of the rag server"""
-    collection: Optional[str] = None
-    """The collection to use for rag"""
+    collections: Optional[List[str]] = None
+    """The collections to use for rag"""
 
 
 class MCPConfig(BaseModel):
@@ -129,14 +129,14 @@ async def graph(config: RunnableConfig):
     async with MultiServerMCPClient() as mcp_client:
         cfg = GraphConfigPydantic(**config.get("configurable", {}))
         tools = []
+        print(f"CFG: {cfg}")
 
-        if cfg.rag and cfg.rag.rag_url and cfg.rag.collection:
-            supabase_token = config.get("configurable", {}).get(
-                "x-supabase-access-token"
-            )
-            if supabase_token is not None:
-                rag_tool = create_rag_tool(
-                    cfg.rag.rag_url, cfg.rag.collection, supabase_token
+        supabase_token = config.get("configurable", {}).get("x-supabase-access-token")
+        print(f"Got supabase token: {supabase_token}")
+        if cfg.rag and cfg.rag.rag_url and cfg.rag.collections and supabase_token:
+            for collection in cfg.rag.collections:
+                rag_tool = await create_rag_tool(
+                    cfg.rag.rag_url, collection, supabase_token
                 )
                 tools.append(rag_tool)
 
