@@ -1,5 +1,4 @@
 import logging
-import os
 import aiohttp
 from typing import Dict, Optional, Any
 from langchain_core.runnables import RunnableConfig
@@ -8,14 +7,14 @@ from langgraph.config import get_store
 
 async def get_mcp_access_token(
     supabase_token: str,
-    base_token_exchange_url: str,
+    base_mcp_url: str,
 ) -> Optional[Dict[str, Any]]:
     """
     Exchange a Supabase token for an MCP access token.
 
     Args:
         supabase_token: The Supabase token to exchange
-        base_token_exchange_url: The base URL for the token exchange service
+        base_mcp_url: The base URL for the MCP server
 
     Returns:
         The token data as a dictionary if successful, None otherwise
@@ -26,13 +25,13 @@ async def get_mcp_access_token(
             "client_id": "mcp_default",
             "subject_token": supabase_token,
             "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-            "resource": f"{base_token_exchange_url}/mcp",
+            "resource": base_mcp_url.rstrip("/") + "/mcp",
             "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
         }
 
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{base_token_exchange_url}/oauth/token",
+                base_mcp_url.rstrip("/") + "/oauth/token",
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
                 data=form_data,
             ) as token_response:
@@ -103,10 +102,6 @@ async def fetch_tokens(config: RunnableConfig) -> dict[str, Any]:
         ValueError: If required configuration is missing
     """
 
-    base_mcp_token_exchange_url = os.environ.get("BASE_MCP_TOKEN_EXCHANGE_URL")
-    if not base_mcp_token_exchange_url:
-        return None
-
     current_tokens = await get_tokens(config)
     if current_tokens:
         return current_tokens
@@ -116,10 +111,10 @@ async def fetch_tokens(config: RunnableConfig) -> dict[str, Any]:
         return None
 
     mcp_config = config.get("configurable", {}).get("mcp_config")
-    if not mcp_config:
+    if not mcp_config or not mcp_config.get("url"):
         return None
 
-    mcp_tokens = await get_mcp_access_token(supabase_token, base_mcp_token_exchange_url)
+    mcp_tokens = await get_mcp_access_token(supabase_token, mcp_config.get("url"))
 
     await set_tokens(config, mcp_tokens)
     return mcp_tokens

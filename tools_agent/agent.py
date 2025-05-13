@@ -149,7 +149,7 @@ async def graph(config: RunnableConfig):
             await mcp_client.connect_to_server(
                 "mcp_server",
                 transport="streamable_http",
-                url=cfg.mcp_config.url,
+                url=cfg.mcp_config.url.rstrip("/") + "/mcp",
                 headers={"Authorization": f"Bearer {mcp_tokens['access_token']}"},
             )
 
