@@ -30,7 +30,7 @@ def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
     return tool
 
 
-def create_rag_tool(rag_url: str, collection: str):
+def create_rag_tool(rag_url: str, collection: str, access_token: str):
     """Create a RAG tool for a specific collection.
 
     Args:
@@ -45,7 +45,9 @@ def create_rag_tool(rag_url: str, collection: str):
 
     collection_endpoint = f"{rag_url}/collections/{collection}"
     try:
-        response = requests.get(collection_endpoint)
+        response = requests.get(
+            collection_endpoint, headers={"Authorization": f"Bearer {access_token}"}
+        )
         response.raise_for_status()
         collection_data = response.json()
 
@@ -71,7 +73,11 @@ def create_rag_tool(rag_url: str, collection: str):
             payload = {"query": query, "limit": 10}
 
             try:
-                search_response = requests.post(search_endpoint, json=payload)
+                search_response = requests.post(
+                    search_endpoint,
+                    json=payload,
+                    headers={"Authorization": f"Bearer {access_token}"},
+                )
                 search_response.raise_for_status()
                 documents = search_response.json()
 
