@@ -114,7 +114,7 @@ class GraphConfigPydantic(BaseModel):
         metadata={
             "x_lg_ui_config": {
                 "type": "rag",
-                # Here is where you would set the default collection.
+                # Here is where you would set the default collection. Use collection IDs
                 # "default": {
                 #     "collections": ["python", "langgraph docs"]
                 # }

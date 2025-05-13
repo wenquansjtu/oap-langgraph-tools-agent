@@ -31,12 +31,12 @@ def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
     return tool
 
 
-async def create_rag_tool(rag_url: str, collection: str, access_token: str):
+async def create_rag_tool(rag_url: str, collection_id: str, access_token: str):
     """Create a RAG tool for a specific collection.
 
     Args:
         rag_url: The base URL for the RAG API server
-        collection: The name of the collection to query
+        collection_id: The ID of the collection to query
         access_token: The access token for authentication
 
     Returns:
@@ -45,7 +45,7 @@ async def create_rag_tool(rag_url: str, collection: str, access_token: str):
     if rag_url.endswith("/"):
         rag_url = rag_url[:-1]
 
-    collection_endpoint = f"{rag_url}/collections/{collection}"
+    collection_endpoint = f"{rag_url}/collections/{collection_id}"
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
@@ -55,7 +55,7 @@ async def create_rag_tool(rag_url: str, collection: str, access_token: str):
                 collection_data = await response.json()
 
         # Get the collection name and sanitize it to match the required regex pattern
-        raw_collection_name = collection_data.get("name", collection)
+        raw_collection_name = collection_data.get("name", f"collection_{collection_id}")
 
         # Sanitize the name to only include alphanumeric characters, underscores, and hyphens
         # Replace any other characters with underscores
@@ -63,7 +63,7 @@ async def create_rag_tool(rag_url: str, collection: str, access_token: str):
 
         # Ensure the name is not empty and doesn't exceed 64 characters
         if not sanitized_name:
-            sanitized_name = "collection"
+            sanitized_name = f"collection_{collection_id}"
         collection_name = sanitized_name[:64]
 
         raw_description = collection_data.get("metadata", {}).get("description")
@@ -79,7 +79,7 @@ async def create_rag_tool(rag_url: str, collection: str, access_token: str):
         ) -> str:
             """Search for documents in the collection based on the query"""
 
-            search_endpoint = f"{rag_url}/collections/{collection}/documents/search"
+            search_endpoint = f"{rag_url}/collections/{collection_id}/documents/search"
             payload = {"query": query, "limit": 10}
 
             try:
