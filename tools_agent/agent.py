@@ -9,11 +9,10 @@ from tools_agent.utils.token import fetch_tokens
 from contextlib import asynccontextmanager
 from tools_agent.utils.tools import wrap_mcp_authenticate_tool
 
+UNEDITABLE_SYSTEM_PROMPT = "\nIf the tool throws an error requiring authentication, provide the user with a Markdown link to the authentication page and prompt them to authenticate."
 
 DEFAULT_SYSTEM_PROMPT = (
-    "You are a helpful assistant that has access to a variety of tools. "
-    "If the tool throws an error requiring authentication, "
-    "provide the user with a Markdown link to the authentication page and prompt them to authenticate."
+    "You are a helpful assistant that has access to a variety of tools."
 )
 
 
@@ -91,7 +90,7 @@ class GraphConfigPydantic(BaseModel):
             "x_lg_ui_config": {
                 "type": "textarea",
                 "placeholder": "Enter a system prompt...",
-                "description": "The system prompt to use in all generations",
+                "description": f"The system prompt to use in all generations. The following prompt will always be included at the end of the system prompt:\n---{UNEDITABLE_SYSTEM_PROMPT}\n---",
                 "default": DEFAULT_SYSTEM_PROMPT,
             }
         },
@@ -166,7 +165,7 @@ async def graph(config: RunnableConfig):
         )
 
         yield create_react_agent(
-            prompt=cfg.system_prompt,
+            prompt=cfg.system_prompt + UNEDITABLE_SYSTEM_PROMPT,
             model=model,
             tools=tools,
             config_schema=GraphConfigPydantic,
