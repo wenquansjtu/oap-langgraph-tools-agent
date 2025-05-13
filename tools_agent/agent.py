@@ -129,10 +129,8 @@ async def graph(config: RunnableConfig):
     async with MultiServerMCPClient() as mcp_client:
         cfg = GraphConfigPydantic(**config.get("configurable", {}))
         tools = []
-        print(f"CFG: {cfg}")
 
         supabase_token = config.get("configurable", {}).get("x-supabase-access-token")
-        print(f"Got supabase token: {supabase_token}")
         if cfg.rag and cfg.rag.rag_url and cfg.rag.collections and supabase_token:
             for collection in cfg.rag.collections:
                 rag_tool = await create_rag_tool(

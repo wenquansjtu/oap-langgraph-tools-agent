@@ -78,7 +78,7 @@ async def create_rag_tool(rag_url: str, collection: str, access_token: str):
             query: Annotated[str, "The search query to find relevant documents"],
         ) -> str:
             """Search for documents in the collection based on the query"""
-            print(f"Search query: {query}")
+
             search_endpoint = f"{rag_url}/collections/{collection}/documents/search"
             payload = {"query": query, "limit": 10}
 
@@ -107,14 +107,6 @@ async def create_rag_tool(rag_url: str, collection: str, access_token: str):
                 return f"<all-documents>\n  <error>{str(e)}</error>\n</all-documents>"
 
         return get_documents
-        # return StructuredTool.from_function(
-        #     func=get_documents,
-        #     name=collection_name,  # This is now sanitized to match ^[a-zA-Z0-9_-]{1,64}$
-        #     description=collection_description,
-        #     # args_schema=SearchArgs,
-        #     return_direct=True,
-        #     coroutine=get_documents,  # Add the coroutine reference for async execution
-        # )
 
     except Exception as e:
         raise Exception(f"Failed to create RAG tool: {str(e)}")
