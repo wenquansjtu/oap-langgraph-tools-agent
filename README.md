@@ -49,6 +49,8 @@ The server will now be running on `http://localhost:2024`.
 
 This agent has been configured to work with the [Open Agent Platform](https://github.com/langchain-ai/open-agent-platform). Please see the [OAP docs](https://github.com/langchain-ai/open-agent-platform/tree/main/README.md) for more information on how to add this agent to your OAP instance.
 
+To update the OAP configuration, you can modify the `GraphConfigPydantic` class in the `agent.py` file. OAP will automatically register any changes to this class. You can modify a specific field's properties by editing the `x_oap_ui_config` metadata object. For more information, see the [Open Agent Platform documentation on graph configuration](https://github.com/langchain-ai/open-agent-platform/?tab=readme-ov-file#configuration).
+
 ## Authentication
 
 This project uses LangGraph custom auth to authenticate requests to the server. It's configured to use Supabase as the authentication provider, however it can be easily swapped for another service.
