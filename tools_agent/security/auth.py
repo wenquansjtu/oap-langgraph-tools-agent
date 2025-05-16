@@ -70,6 +70,7 @@ async def get_current_user(authorization: str | None) -> Auth.types.MinimalUserD
 
 
 @auth.on.threads.create
+@auth.on.threads.create_run
 async def on_thread_create(
     ctx: Auth.types.AuthContext,
     value: Auth.types.on.threads.create.value,
@@ -88,6 +89,8 @@ async def on_thread_create(
     # This metadata is stored with the thread and persists
     metadata = value.setdefault("metadata", {})
     metadata["owner"] = ctx.user.identity
+
+    print(f"\n\n\n\nOWNER: {ctx.user.identity}\n\n\n\nvalue: {value}")
 
 
 @auth.on.threads.read

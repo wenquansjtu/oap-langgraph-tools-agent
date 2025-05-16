@@ -127,6 +127,9 @@ class GraphConfigPydantic(BaseModel):
 
 async def graph(config: RunnableConfig):
     cfg = GraphConfigPydantic(**config.get("configurable", {}))
+    print(
+        f"\n\n\nim called\n{config.get('configurable', {}).get('assistant_id')}\n\n{cfg.model_dump()}"
+    )
     tools = []
 
     supabase_token = config.get("configurable", {}).get("x-supabase-access-token")
@@ -143,6 +146,7 @@ async def graph(config: RunnableConfig):
         and cfg.mcp_config.tools
         and (mcp_tokens := await fetch_tokens(config))
     ):
+        print("\n\n\nMCP Tokens: ", mcp_tokens)
         mcp_client = MultiServerMCPClient(
             connections={
                 "mcp_server": {
@@ -154,6 +158,7 @@ async def graph(config: RunnableConfig):
                 }
             }
         )
+        print("\n\nHELLO")
         tools.extend(
             [
                 wrap_mcp_authenticate_tool(tool)
@@ -168,6 +173,7 @@ async def graph(config: RunnableConfig):
         max_tokens=cfg.max_tokens,
     )
 
+    print("\n\n\n\nI GOT CALLEDDD\n\n\n\n")
     return create_react_agent(
         prompt=cfg.system_prompt + UNEDITABLE_SYSTEM_PROMPT,
         model=model,
