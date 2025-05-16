@@ -24,7 +24,7 @@ packages = ["tools_agent"]
 [dependency-groups]
 dev = [
     "ruff>=0.8.4",
-    "langgraph-api==0.2.21",
+    "langgraph-api==0.2.27",
     "langgraph-cli==0.2.10",
     "langgraph-runtime-inmem>=0.0.11",
 ]

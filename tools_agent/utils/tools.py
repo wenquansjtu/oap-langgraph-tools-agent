@@ -2,7 +2,6 @@ from typing import Annotated
 from langchain_core.tools import StructuredTool, ToolException, tool
 import aiohttp
 import re
-from mcp import McpError
 
 
 def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
@@ -14,9 +13,20 @@ def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
 
     async def wrapped_mcp_coroutine(**kwargs):
         try:
-            return await old_coroutine(**kwargs)
-        except McpError as e:
-            if e.error.code == -32003 and e.error.data:
+            response = await old_coroutine(**kwargs)
+            return response
+        except Exception as e:
+            if "TaskGroup" in str(e) and hasattr(e, "__context__"):
+                sub_exception = e.__context__
+                if hasattr(sub_exception, "error"):
+                    e = sub_exception
+
+            if (
+                hasattr(e, "error")
+                and hasattr(e.error, "code")
+                and e.error.code == -32003
+                and hasattr(e.error, "data")
+            ):
                 error_message = (
                     ((e.error.data or {}).get("message") or {}).get("text")
                 ) or "Required interaction"
