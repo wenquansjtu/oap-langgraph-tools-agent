@@ -624,15 +624,15 @@ wheels = [
 
 [[package]]
 name = "langchain-mcp-adapters"
-version = "0.0.11"
+version = "0.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "langchain-core" },
     { name = "mcp" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/a8/931c13137f6f87b791d77241f0593f4a805b62e7161515d22f8334446d8d/langchain_mcp_adapters-0.0.11.tar.gz", hash = "sha256:664b0aac83f0b41c2a0d00344a608a59df55b07e27cde303a26334c7e3ea4051", size = 15628 }
+sdist = { url = "https://files.pythonhosted.org/packages/91/e2/f1a7f4f24f65a33661ccc58ed603ce8ef24e495ad33842276dcbbdb856eb/langchain_mcp_adapters-0.1.0.tar.gz", hash = "sha256:373d294779049dff03086bec4a1548fcbf9fcad1a7e9db927392b2e3b8a5c561", size = 16781 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/59/0d/c896c194222965494a7be56513d1da452ece4111e19bb97de1b3677e289b/langchain_mcp_adapters-0.0.11-py3-none-any.whl", hash = "sha256:e10a5ee6b5823fe51d93439011bfc92d9d929ff16b8e982ba5bf51d0bcf650af", size = 10652 },
+    { url = "https://files.pythonhosted.org/packages/14/ea/4bd4871f9a7361057a211e142bf894c26ca6e9bc2841969e482e204741b1/langchain_mcp_adapters-0.1.0-py3-none-any.whl", hash = "sha256:1a06090899878cebe9d728104b1e553f7ba73d5f00655266ce0de583667f63b2", size = 12031 },
 ]
 
 [[package]]
@@ -1486,7 +1486,7 @@ requires-dist = [
     { name = "langchain", specifier = "==0.3.25" },
     { name = "langchain-anthropic", specifier = "==0.3.13" },
     { name = "langchain-core", specifier = "==0.3.59" },
-    { name = "langchain-mcp-adapters", specifier = "==0.0.11" },
+    { name = "langchain-mcp-adapters", specifier = "==0.1.0" },
     { name = "langchain-openai", specifier = "==0.3.16" },
     { name = "langgraph", specifier = "==0.4.3" },
     { name = "pydantic", specifier = "==2.11.3" },

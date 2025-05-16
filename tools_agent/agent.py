@@ -6,7 +6,6 @@ from tools_agent.utils.tools import create_rag_tool
 from langchain.chat_models import init_chat_model
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from tools_agent.utils.token import fetch_tokens
-from contextlib import asynccontextmanager
 from tools_agent.utils.tools import wrap_mcp_authenticate_tool
 
 UNEDITABLE_SYSTEM_PROMPT = "\nIf the tool throws an error requiring authentication, provide the user with a Markdown link to the authentication page and prompt them to authenticate."
@@ -126,50 +125,54 @@ class GraphConfigPydantic(BaseModel):
     )
 
 
-@asynccontextmanager
 async def graph(config: RunnableConfig):
-    async with MultiServerMCPClient() as mcp_client:
-        cfg = GraphConfigPydantic(**config.get("configurable", {}))
-        tools = []
+    cfg = GraphConfigPydantic(**config.get("configurable", {}))
+    tools = []
 
-        supabase_token = config.get("configurable", {}).get("x-supabase-access-token")
-        if cfg.rag and cfg.rag.rag_url and cfg.rag.collections and supabase_token:
-            for collection in cfg.rag.collections:
-                rag_tool = await create_rag_tool(
-                    cfg.rag.rag_url, collection, supabase_token
-                )
-                tools.append(rag_tool)
-
-        if (
-            cfg.mcp_config
-            and cfg.mcp_config.url
-            and cfg.mcp_config.tools
-            and (mcp_tokens := await fetch_tokens(config))
-        ):
-            await mcp_client.connect_to_server(
-                "mcp_server",
-                transport="streamable_http",
-                url=cfg.mcp_config.url.rstrip("/") + "/mcp",
-                headers={"Authorization": f"Bearer {mcp_tokens['access_token']}"},
+    supabase_token = config.get("configurable", {}).get("x-supabase-access-token")
+    if cfg.rag and cfg.rag.rag_url and cfg.rag.collections and supabase_token:
+        for collection in cfg.rag.collections:
+            rag_tool = await create_rag_tool(
+                cfg.rag.rag_url, collection, supabase_token
             )
+            tools.append(rag_tool)
 
-            tools.extend(
-                [
-                    wrap_mcp_authenticate_tool(tool)
-                    for tool in mcp_client.get_tools()
-                    if tool.name in cfg.mcp_config.tools
-                ]
-            )
-
-        model = init_chat_model(
-            cfg.model_name,
-            temperature=cfg.temperature,
-            max_tokens=cfg.max_tokens,
+    if (
+        cfg.mcp_config
+        and cfg.mcp_config.url
+        and cfg.mcp_config.tools
+        and (mcp_tokens := await fetch_tokens(config))
+    ):
+        mcp_client = MultiServerMCPClient(
+            connections={
+                "mcp_server": {
+                    "transport": "streamable_http",
+                    "url": cfg.mcp_config.url.rstrip("/") + "/mcp",
+                    "headers": {
+                        "Authorization": f"Bearer {mcp_tokens['access_token']}"
+                    },
+                }
+            }
+        )
+        tools.extend(
+            [
+                wrap_mcp_authenticate_tool(tool)
+                for tool in await mcp_client.get_tools()
+                if tool.name in cfg.mcp_config.tools
+            ]
         )
 
-        yield create_react_agent(
-            prompt=cfg.system_prompt + UNEDITABLE_SYSTEM_PROMPT,
-            model=model,
-            tools=tools,
-            config_schema=GraphConfigPydantic,
-        )
+    model = init_chat_model(
+        cfg.model_name,
+        temperature=cfg.temperature,
+        max_tokens=cfg.max_tokens,
+    )
+
+    print(f"returning: {len(tools)}")
+
+    return create_react_agent(
+        prompt=cfg.system_prompt + UNEDITABLE_SYSTEM_PROMPT,
+        model=model,
+        tools=tools,
+        config_schema=GraphConfigPydantic,
+    )
