@@ -40,7 +40,9 @@ This project requires a Supabase account with authentication to be setup. This i
 After setting your environment variables, you can start the server by running:
 
 ```bash
-uv run langgraph run agent
+# The --no-browser will disable auto-opening LangGraph studio when the server starts
+# optional, but recommended since the studio is not needed for this project
+uv run langgraph dev --no-browser
 ```
 
 The server will now be running on `http://localhost:2024`.
