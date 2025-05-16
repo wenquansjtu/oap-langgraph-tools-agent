@@ -89,9 +89,6 @@ async def on_thread_create(
     metadata = value.setdefault("metadata", {})
     metadata["owner"] = ctx.user.identity
 
-    # Return filter to restrict access to just the creator
-    return {"owner": ctx.user.identity}
-
 
 @auth.on.threads.read
 @auth.on.threads.delete
@@ -125,9 +122,6 @@ async def on_assistants_create(
     # This metadata is stored with the assistant and persists
     metadata = value.setdefault("metadata", {})
     metadata["owner"] = ctx.user.identity
-
-    # Return filter to restrict access to just the creator
-    return {"owner": ctx.user.identity}
 
 
 @auth.on.assistants.read
