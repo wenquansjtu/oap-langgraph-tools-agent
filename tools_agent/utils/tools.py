@@ -13,14 +13,9 @@ def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
 
     async def wrapped_mcp_coroutine(**kwargs):
         try:
-            print(f"\n\n\nInput: {kwargs}\n\n\n")
             response = await old_coroutine(**kwargs)
-            print(f"\n\n\nResponse: {response}\n\n\n")
             return response
         except Exception as e:
-            print("ERROR\n\n\n\n")
-            print(e)
-
             if "TaskGroup" in str(e) and hasattr(e, "__context__"):
                 sub_exception = e.__context__
                 if hasattr(sub_exception, "error"):
