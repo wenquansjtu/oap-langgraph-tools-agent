@@ -90,8 +90,6 @@ async def on_thread_create(
     metadata = value.setdefault("metadata", {})
     metadata["owner"] = ctx.user.identity
 
-    print(f"\n\n\n\nOWNER: {ctx.user.identity}\n\n\n\nvalue: {value}")
-
 
 @auth.on.threads.read
 @auth.on.threads.delete
