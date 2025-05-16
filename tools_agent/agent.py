@@ -168,8 +168,6 @@ async def graph(config: RunnableConfig):
         max_tokens=cfg.max_tokens,
     )
 
-    print(f"returning: {len(tools)}")
-
     return create_react_agent(
         prompt=cfg.system_prompt + UNEDITABLE_SYSTEM_PROMPT,
         model=model,
