@@ -70,6 +70,7 @@ async def get_current_user(authorization: str | None) -> Auth.types.MinimalUserD
 
 
 @auth.on.threads.create
+@auth.on.threads.create_run
 async def on_thread_create(
     ctx: Auth.types.AuthContext,
     value: Auth.types.on.threads.create.value,
