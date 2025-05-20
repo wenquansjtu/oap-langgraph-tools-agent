@@ -37,11 +37,11 @@ class MCPConfig(BaseModel):
 
 class GraphConfigPydantic(BaseModel):
     model_name: Optional[str] = Field(
-        default="openai:gpt-4o"",
+        default="openai:gpt-4o",
         metadata={
             "x_oap_ui_config": {
                 "type": "select",
-                "default": "openai:gpt-4o"",
+                "default": "openai:gpt-4o",
                 "description": "The model to use in all generations",
                 "options": [
                     {
