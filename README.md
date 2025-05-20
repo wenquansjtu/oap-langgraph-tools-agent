@@ -63,6 +63,7 @@ The auth handler then takes that token and verifies it with Supabase. If the tok
 
 ```bash
 SUPABASE_URL=""
+# Ensure this is your Supabase Service Role key
 SUPABASE_KEY=""
 ```
 
