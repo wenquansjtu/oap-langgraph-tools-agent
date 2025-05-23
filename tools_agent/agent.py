@@ -4,9 +4,15 @@ from pydantic import BaseModel, Field
 from langgraph.prebuilt import create_react_agent
 from tools_agent.utils.tools import create_rag_tool
 from langchain.chat_models import init_chat_model
-from langchain_mcp_adapters.client import MultiServerMCPClient
 from tools_agent.utils.token import fetch_tokens
-from tools_agent.utils.tools import wrap_mcp_authenticate_tool
+from mcp.client.streamable_http import streamablehttp_client
+from mcp import ClientSession
+from langchain_core.tools import StructuredTool
+from tools_agent.utils.tools import (
+    wrap_mcp_authenticate_tool,
+    create_langchain_mcp_tool,
+)
+
 
 UNEDITABLE_SYSTEM_PROMPT = "\nIf the tool throws an error requiring authentication, provide the user with a Markdown link to the authentication page and prompt them to authenticate."
 
@@ -143,24 +149,51 @@ async def graph(config: RunnableConfig):
         and cfg.mcp_config.tools
         and (mcp_tokens := await fetch_tokens(config))
     ):
-        mcp_client = MultiServerMCPClient(
-            connections={
-                "mcp_server": {
-                    "transport": "streamable_http",
-                    "url": cfg.mcp_config.url.rstrip("/") + "/mcp",
-                    "headers": {
-                        "Authorization": f"Bearer {mcp_tokens['access_token']}"
-                    },
-                }
-            }
-        )
-        tools.extend(
-            [
-                wrap_mcp_authenticate_tool(tool)
-                for tool in await mcp_client.get_tools()
-                if tool.name in cfg.mcp_config.tools
-            ]
-        )
+        server_url = cfg.mcp_config.url.rstrip("/") + "/mcp"
+        access_token = mcp_tokens["access_token"]
+
+        tool_names_to_find = set(cfg.mcp_config.tools)
+        fetched_mcp_tools_list: list[StructuredTool] = []
+        names_of_tools_added = set()
+
+        headers = {"Authorization": f"Bearer {access_token}"}
+        async with streamablehttp_client(server_url, headers=headers) as streams:
+            read_stream, write_stream, _ = streams
+            async with ClientSession(read_stream, write_stream) as session:
+                await session.initialize()
+
+                page_cursor = None
+
+                while True:
+                    tool_list_page = await session.list_tools(cursor=page_cursor)
+
+                    if not tool_list_page or not tool_list_page.tools:
+                        break
+
+                    for mcp_tool in tool_list_page.tools:
+                        if not tool_names_to_find or (
+                            mcp_tool.name in tool_names_to_find
+                            and mcp_tool.name not in names_of_tools_added
+                        ):
+                            langchain_tool = create_langchain_mcp_tool(
+                                mcp_tool, mcp_server_url=server_url, headers=headers
+                            )
+                            fetched_mcp_tools_list.append(
+                                wrap_mcp_authenticate_tool(langchain_tool)
+                            )
+                            if tool_names_to_find:
+                                names_of_tools_added.add(mcp_tool.name)
+
+                    page_cursor = tool_list_page.nextCursor
+
+                    if not page_cursor:
+                        break
+                    if tool_names_to_find and len(names_of_tools_added) == len(
+                        tool_names_to_find
+                    ):
+                        break
+
+                tools.extend(fetched_mcp_tools_list)
 
     model = init_chat_model(
         cfg.model_name,
