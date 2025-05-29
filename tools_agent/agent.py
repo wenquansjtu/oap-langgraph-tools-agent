@@ -41,7 +41,7 @@ class GraphConfigPydantic(BaseModel):
         metadata={
             "x_oap_ui_config": {
                 "type": "select",
-                "default": "openai:gpt-4.1",
+                "default": "openai:gpt-4o",
                 "description": "The model to use in all generations",
                 "options": [
                     {
