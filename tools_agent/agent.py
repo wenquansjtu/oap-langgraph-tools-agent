@@ -80,10 +80,6 @@ class GraphConfigPydantic(BaseModel):
                     },
                     {
                         "label": "Morpheus",
-                        "value": "morpheus:morpheus",
-                    },
-                    {
-                        "label": "智谱 GLM4",
                         "value": "zhipu:glm-4",
                     },
                 ],
