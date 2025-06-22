@@ -99,10 +99,6 @@ class GraphConfigPydantic(BaseModel):
             }
         },
     )
-    max_tokens: Optional[int] = Field(
-        default=4000,
-        description="The maximum number of tokens to generate (fixed at 4000)",
-    )
     system_prompt: Optional[str] = Field(
         default=DEFAULT_SYSTEM_PROMPT,
         metadata={
@@ -224,7 +220,7 @@ async def graph(config: RunnableConfig):
     model = init_chat_model(
         cfg.model_name,
         temperature=cfg.temperature,
-        max_tokens=cfg.max_tokens,
+        max_tokens=4000,
     )
 
     return create_react_agent(
