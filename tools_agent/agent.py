@@ -66,6 +66,26 @@ class GraphConfigPydantic(BaseModel):
                     {"label": "GPT 4o", "value": "openai:gpt-4o"},
                     {"label": "GPT 4o mini", "value": "openai:gpt-4o-mini"},
                     {"label": "GPT 4.1", "value": "openai:gpt-4.1"},
+                    {
+                        "label": "DeepSeek Coder",
+                        "value": "deepseek:deepseek-coder",
+                    },
+                    {
+                        "label": "DeepSeek Chat",
+                        "value": "deepseek:deepseek-chat",
+                    },
+                    {
+                        "label": "DeepSeek Coder Instruct",
+                        "value": "deepseek:deepseek-coder-instruct",
+                    },
+                    {
+                        "label": "Morpheus",
+                        "value": "morpheus:morpheus",
+                    },
+                    {
+                        "label": "智谱 GLM4",
+                        "value": "zhipu:glm-4",
+                    },
                 ],
             }
         },
@@ -85,14 +105,7 @@ class GraphConfigPydantic(BaseModel):
     )
     max_tokens: Optional[int] = Field(
         default=4000,
-        metadata={
-            "x_oap_ui_config": {
-                "type": "number",
-                "default": 4000,
-                "min": 1,
-                "description": "The maximum number of tokens to generate",
-            }
-        },
+        description="The maximum number of tokens to generate (fixed at 4000)",
     )
     system_prompt: Optional[str] = Field(
         default=DEFAULT_SYSTEM_PROMPT,

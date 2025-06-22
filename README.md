@@ -86,3 +86,27 @@ For creation methods, it auto-injects the user's ID into the metadata. This is t
 By using custom authentication, we can call this LangGraph server directly from a frontend application, without having to worry about exposing API keys/secrets, since you only need a JWT token from Supabase to authenticate.
 
 For more info, see our [LangGraph custom auth docs](https://langchain-ai.github.io/langgraph/tutorials/auth/getting_started/).
+
+## Supported Models
+
+This agent supports multiple LLM providers:
+
+### OpenAI Models
+- GPT-4o
+- GPT-4o mini  
+- GPT-4.1
+
+### Anthropic Models
+- Claude 3.7 Sonnet
+- Claude 3.5 Sonnet
+
+### DeepSeek Models
+- DeepSeek Coder
+- DeepSeek Chat
+- DeepSeek Coder Instruct
+
+### Other Models
+- Morpheus
+- 智谱 GLM4 (需要额外配置)
+
+For detailed configuration instructions for the new models, see [MODEL_SETUP.md](MODEL_SETUP.md).
